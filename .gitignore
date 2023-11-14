@@ -1,0 +1,4 @@
+.venv
+d.py
+app/migrations/
+node_modules/

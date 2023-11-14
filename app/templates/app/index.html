@@ -1,0 +1,86 @@
+{% extends 'app/layout.html' %}
+{% load static %}
+
+{% block title %}
+index
+{% endblock %}
+
+{% block body %}
+    <h1 class="login_header" >WhatsTheWeather</h1>
+    <div id="content">
+        
+    </div>
+
+    <script type="text/babel">
+        var query = document.getElementById('query');
+        query.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const location = document.getElementsByName('province')[0].value.replace(' ', '+');
+        const apiKey ='{{ API_KEY }}';
+        fetch(`http://api.openweathermap.org/data/2.5/weather?q=${location},us&APPID=${apiKey}`)
+        .then(response => response.json())
+        .then(data => {
+           if (data.cod != '200') {
+            //    If No API Key
+                throw new Error(data.message);
+           }
+           fetch('/cache',
+           {
+            //    Save Data in Local Storage
+               method: 'POST',
+               body: JSON.stringify(data),
+               headers: {
+                   'Content-Type': 'application/json'
+               }
+           })
+           .then(response => response.json())
+           .then(data => {
+               Display(data);
+           })
+        })
+        .catch(error => {
+            //    If No API Key
+            fetch(`/wheather/${location}`, {
+                method: 'GET',
+            })
+            .then(response => {
+             if (response.status != 200) {
+                    return document.getElementById('content').innerHTML = `<h1>${response.status}</h1>`;
+             } else {
+                return response.json();
+             }
+            })
+    
+            .then(data => {
+                Display(data);
+            {}})
+        })
+        });
+        
+        function Components(props) {
+            return (
+                // Card
+                <div className="card">
+                    <img src={`https://openweathermap.org/img/wn/${props.data.icon}@2x.png`} className="rounded float-start" alt="..." />
+                    <div className="card-body">
+                        <h5 className="card-title">city: {props.data.city}</h5>
+                        <p className="card-text">Feels Like: {props.data.feels_like}</p>
+                        <p className="card-text">Humidity: {props.data.humidity}</p>
+                        <p className="card-text">Pressure: {props.data.pressure}</p>
+                        <p className="card-text">Temperature: {props.data.temperature}</p>
+                        <p className="card-text">Visibility: {props.data.visibility}</p>
+                        <p className="card-text">Wind Speed: {props.data.wind_speed}</p>
+                        <p className="card-text">Last Updated: {props.data.created_at}</p>
+                    </div>
+                    </div>
+            )
+        }
+        
+        function Display(data) {
+            ReactDOM.render(
+                < Components data={data}/>, document.querySelector('#content')
+            ) 
+        }
+
+    </script>
+{% endblock %}
